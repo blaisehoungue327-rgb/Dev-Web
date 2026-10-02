@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="MonLogo.css">
+    <title>Document</title>
+</head>
+
+<body>
+    <header>
+        <div class="monlogo">Mon<em>Logo</em></div>
+        <nav>
+            <ul>
+                <li> <a href="#">Accueil</a></li>
+                <li> <a href="#">Profil</a></li>
+                <li> <a href="#">Contact</a></li>
+            </ul>
+        </nav>
+        <button class="btn">Se connecter</button>
+    </header>
+    <main>
+        <section class="sect-1">
+            <div class="container-1">
+                <h1>Plongez dans le monde numérique,<br><em> changez votre avenir</em></h1>
+                <p>Notre site propose des cours dans différents domaines de l'informatique.<br>Le site va vous
+                    permettre d'avoir une compréhension de l'informatique moderne. </b></p>
+                <button class="btn"><a href="#inscription">Commencer</a></button>
+            </div>
+        </section>
+        <section class="sect-2">
+            <h2>Quelques-uns de nos cours</h2>
+            <div class="container-2">
+                <div class=" cart-2">
+                    <h2>HTML</h2>
+                    <p>Le HTML sert à structurer votre page web. C'est la base indispensable si voulez créer un site web.
+                    </p>
+                </div>
+                <div class="cart-2">
+                    <h2>CSS</h2>
+                    <p>Le CSS sert à donner du style à votre page web. Il la rend plus belle agréable à voir.
+                    </p>
+
+                </div>
+            </div>
+        </section>
+        <section class="sect-3">
+            <h3>Découvrez d'autres cours en plus de ceux que je vous ai présenté auparenvant</h3>
+            <div class="div-tab">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="th-1">Cours</th>
+                            <th>Fonctions</th>
+                            <th>Importance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>HTML</td>
+                            <td>Pour structurer une page web</td>
+                            <td>Site web</td>
+                        </tr>
+
+                        <!-- background gris -->
+                        <tr style="background-color: #fff8f0;">
+                            <td>CSS</td>
+                            <td>Pour styliser une page web</td>
+                            <td>Site web</td>
+                        </tr>
+
+                        <tr>
+                            <td>PHP</td>
+                            <td>Pour gérer les bases de données</td>
+                            <td>Applications web</td>
+                        </tr>
+
+                        <!--  -->
+                        <tr style="background-color: #fff8f0;">
+                            <td>SQL</td>
+                            <td>Pour gérer les bases de données</td>
+                            <td>Applications web</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td>Cours Avancés(C, C++, Java...) </td>
+                            <td>Structure, style, bases de données...</td>
+                            <td>Applications, jeux video, systèmes...</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+        <section class="sect-4">
+            <legend>Inscrivez-vous ici</legend>
+            <form method="post" action="" id="inscription" class="form">
+                <label for="nom">
+                    <div>Entrez votre nom :</div>
+                    <div>
+                        <p class="pCheck invalidNom"></p>
+                        <input type="text" name="nom" class="valider invalider" id="nom" placeholder="Ex. : HOUNGUE" autofocus >
+                    </div>                    
+                </label>
+
+                <label for="prenom">
+                    <div>Entrez votre prénom :</div>
+                    <div>
+                        <p class="pCheck invalidPrenom"></p>
+                        <input type="text" class="valider"  class="invalider" name="prenom" id="prenom" placeholder="Ex. : Mahutin Blaise" >
+                    </div>
+                    
+                </label>
+
+                <label for="numero">
+                    <div>Entrez votre numéro de téléphone :</div>
+                    <div>
+                       <p class="pCheck invalidTel"></p> 
+                       <input type="tel" name="numero" class="valider"  class="invalider" id="numero" placeholder="Ex. : 0156484953">
+                    </div>
+                    
+                </label>
+                
+
+                <label style="border-radius: 0 0 12px 12px;" for="mail">
+                    <div>Entrez votre adresse email :</div>
+                    <div>
+                      <p class="pCheck invalidMail"></p>
+                        <input type="email" name="mail" class="valider"  class="invalider" id="mail"
+                            placeholder="Ex. : blaisehoungue25@gmail.com" 
+                        >
+                    </div>
+                   
+                </label>
+                
+
+                <button type="submit">Valider</button>
+            </form>
+        </section>
+        <footer>
+            <div class="div-footer">
+                <div class="cart-foot">
+                    <h3>Notre entreprise</h3>
+                    <ul>
+                        <li><a href="">CSS</a></li>
+                        <li><a href="">HTML</a></li>
+                        <li><a href="">Javascript</a></li>
+                        <li><a href="">PHP</a></li>
+                        <li><a href="">SQL</a></li>
+                        <li><a href="">Pyton</a></li>
+                    </ul>
+                </div>
+                <div class="cart-foot">
+                    <h3>Conditions et politiques</h3>
+                    <p>Respecter nos politiques...</p>
+                </div>
+            </div>
+            <hr>
+            <div>
+                <p>&copy
+                    <script>document.write(new Date().getFullYear());</script> Tout droit de l'auteurs reservés.
+                </p>
+            </div>
+        </footer>
+
+    </main>
+</body>
+<script src="MonLogo.js"></script>
+</html>
