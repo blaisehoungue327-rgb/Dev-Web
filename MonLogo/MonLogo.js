@@ -6,7 +6,7 @@ const verificationNom = (nom) => {
     let n = nom.trim();
     if (n === "") return "Champs vide";
     if (n.length < 3) return "Au moins trois lettres";
-    if (!regexTexte.test(n)) return "invalid";
+    if (!regexTexte.test(n)) return "invalide";
     return "";
 }
 
@@ -14,21 +14,21 @@ const verificationPrenom = (prenom) => {
     let n = prenom.trim();
     if (n === "") return "Champs vide";
     if (n.length < 3) return "Au moins trois lettres";
-    if (!regexTexte.test(n)) return "invalid";
+    if (!regexTexte.test(n)) return "invalide";
     return "";
 }
 
 const verificationEmail = (email) => {
         let mail = email.trim();
         if (mail === "") return "Champs vide";
-        if (!regexEmail.test(mail)) return "invalid";
+        if (!regexEmail.test(mail)) return "invalide";
         return "";
 }
 
 const verificationTel = (tel) => {
         let numero = tel.trim();
         if (numero === "") return "Champs vide";
-        if (!regexTel.test(numero)) return "invalid";
+        if (!regexTel.test(numero)) return "invalide";
         return "";
 }
 
