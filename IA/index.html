@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Monde Actu</title>
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--txt:#101828;--sub:#667085;--acc:#2563eb;--line:#e4e7ec}
+@media(prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#121b2d;--txt:#e9edf6;--sub:#8e9bb3;--acc:#6ea8ff;--line:#223049}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.4 system-ui,-apple-system,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(10px + env(safe-area-inset-top)) 14px 0;border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;justify-content:space-between}
+h1{font-size:21px;margin:0}
+.tools{display:flex;gap:6px}
+.tools button{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:10px;height:36px;min-width:36px;font-size:17px;padding:0 10px}
+nav{display:flex;gap:8px;overflow-x:auto;padding:10px 0;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--txt);border-radius:999px;padding:7px 14px;font-size:14px}
+nav button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+main{padding:12px 12px 40px;max-width:720px;margin:auto}
+.card{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;text-decoration:none;color:inherit}
+.card.read h3{color:var(--sub);font-weight:500}
+.card img{width:92px;height:92px;object-fit:cover;border-radius:10px;flex:none;background:var(--line)}
+.body{min-width:0;flex:1}
+h3{margin:0 0 4px;font-size:16px;line-height:1.3}
+.meta{font-size:12px;color:var(--sub);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.desc{font-size:13px;color:var(--sub);margin:0 0 6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.star{background:none;border:0;font-size:18px;color:var(--sub);padding:0 2px}
+.star.on{color:#f5b301}
+#status{text-align:center;color:var(--sub);font-size:13px;padding:8px}
+#banner{display:none;margin:10px 12px;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:12px;font-size:14px}
+.spin{display:inline-block;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>🌍 Monde Actu</h1>
+    <div class="tools">
+      <button id="bInstall" hidden title="Installer">⬇️</button>
+      <button id="bBell" title="Notifications">🔔</button>
+      <button id="bRef" title="Actualiser"><span id="ico">⟳</span></button>
+    </div>
+  </div>
+  <nav id="tabs"></nav>
+</header>
+<div id="banner"></div>
+<main id="list"></main>
+<div id="status"></div>
+
+<script>
+// ---------- Icône + manifeste générés directement (pas de fichiers à part) ----------
+function makeIcon(S) {
+  const c = document.createElement('canvas');
+  c.width = c.height = S;
+  const x = c.getContext('2d');
+  x.fillStyle = '#0b1220'; x.fillRect(0, 0, S, S);
+  const g = x.createRadialGradient(S / 2, S / 2, S * 0.1, S / 2, S / 2, S * 0.5);
+  g.addColorStop(0, 'rgba(37,99,235,.55)'); g.addColorStop(1, 'rgba(37,99,235,0)');
+  x.fillStyle = g; x.fillRect(0, 0, S, S);
+  const r = S * 0.27;
+  x.lineWidth = Math.max(2, S * 0.028);
+  x.strokeStyle = '#fff';
+  x.fillStyle = '#2563eb';
+  x.beginPath(); x.arc(S / 2, S / 2, r, 0, 7); x.fill(); x.stroke();
+  x.beginPath(); x.ellipse(S / 2, S / 2, r * 0.45, r, 0, 0, 7); x.stroke();
+  x.beginPath(); x.ellipse(S / 2, S / 2, r, r * 0.5, 0, 0, 7); x.stroke();
+  x.beginPath(); x.moveTo(S / 2, S / 2 - r); x.lineTo(S / 2, S / 2 + r); x.stroke();
+  x.beginPath(); x.moveTo(S / 2 - r, S / 2); x.lineTo(S / 2 + r, S / 2); x.stroke();
+  return c.toDataURL('image/png');
+}
+const ICON192 = makeIcon(192), ICON512 = makeIcon(512);
+function addLink(rel, href) {
+  const l = document.createElement('link');
+  l.rel = rel; l.href = href; document.head.append(l);
+}
+addLink('icon', ICON192);
+addLink('apple-touch-icon', ICON192);
+try {
+  const manifest = {
+    name: 'Monde Actu', short_name: 'Actu', description: 'Les infos du monde en direct',
+    start_url: location.href.split('#')[0], display: 'standalone',
+    background_color: '#0b1220', theme_color: '#0b1220', lang: 'fr',
+    icons: [
+      { src: ICON192, sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: ICON512, sizes: '512x512', type: 'image/png', purpose: 'any' }
+    ]
+  };
+  addLink('manifest', URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' })));
+} catch {}
+
+// ---------- Flux d'actualités ----------
+const FEEDS = {
+  'À la une': [['France 24','https://www.france24.com/fr/rss'],['RFI','https://www.rfi.fr/fr/rss'],['BBC','https://feeds.bbci.co.uk/news/world/rss.xml'],['Al Jazeera','https://www.aljazeera.com/xml/rss/all.xml']],
+  'Afrique':  [['RFI','https://www.rfi.fr/fr/afrique/rss'],['France 24','https://www.france24.com/fr/afrique/rss'],['BBC Africa','https://feeds.bbci.co.uk/news/world/africa/rss.xml']],
+  'Économie': [['RFI','https://www.rfi.fr/fr/economie/rss'],['BBC Business','https://feeds.bbci.co.uk/news/business/rss.xml']],
+  'Sport':    [['RFI','https://www.rfi.fr/fr/sports/rss'],['BBC Sport','https://feeds.bbci.co.uk/sport/rss.xml']],
+  'Tech':     [['BBC Tech','https://feeds.bbci.co.uk/news/technology/rss.xml']],
+  'Science':  [['BBC Science','https://feeds.bbci.co.uk/news/science_and_environment/rss.xml']]
+};
+const FAV = '⭐ Favoris';
+const $ = s => document.querySelector(s);
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} };
+
+let cat = load('cat', 'À la une');
+if (cat !== FAV && !FEEDS[cat]) cat = 'À la une';
+let read = new Set(load('read', []));
+let favs = load('favs', {});
+let seen = new Set(load('seen', []));
+let items = [];
+let busy = false, lastRefresh = 0;
+
+const PROXIES = [
+  u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  u => 'https://corsproxy.io/?url=' + encodeURIComponent(u)
+];
+async function getXML(url) {
+  for (const p of PROXIES) {
+    try {
+      const r = await fetch(p(url));
+      if (!r.ok) continue;
+      const x = new DOMParser().parseFromString(await r.text(), 'text/xml');
+      if (x.querySelector('item')) return x;
+    } catch {}
+  }
+  return null;
+}
+const text = h => new DOMParser().parseFromString(h || '', 'text/html').body.textContent.trim();
+const safeUrl = u => /^https?:\/\//i.test(u) ? u : '';
+
+function parse(xml, source) {
+  return [...xml.querySelectorAll('item')].slice(0, 12).map(i => {
+    const g = t => i.getElementsByTagName(t)[0]?.textContent?.trim() || '';
+    const m = [
+      ...i.getElementsByTagNameNS('*', 'thumbnail'),
+      ...i.getElementsByTagNameNS('*', 'content'),
+      ...i.getElementsByTagName('enclosure')
+    ].find(n => n.getAttribute('url') && (!n.getAttribute('type') || n.getAttribute('type').startsWith('image')));
+    const d = new Date(g('pubDate') || g('dc:date'));
+    return {
+      title: text(g('title')),
+      link: safeUrl(g('link')),
+      desc: text(g('description')).slice(0, 160),
+      img: safeUrl(m?.getAttribute('url') || ''),
+      date: isNaN(d) ? Date.now() : +d,
+      source
+    };
+  }).filter(x => x.title && x.link);
+}
+
+async function fetchCat(c) {
+  const res = await Promise.all(FEEDS[c].map(async ([s, u]) => {
+    const x = await getXML(u);
+    return x ? parse(x, s) : [];
+  }));
+  const dup = new Set();
+  return res.flat().sort((a, b) => b.date - a.date).filter(x => !dup.has(x.link) && dup.add(x.link));
+}
+
+// ---------- Affichage ----------
+const ago = t => {
+  const m = Math.max(1, Math.round((Date.now() - t) / 60000));
+  return m < 60 ? `il y a ${m} min` : m < 1440 ? `il y a ${Math.round(m / 60)} h` : `il y a ${Math.round(m / 1440)} j`;
+};
+function el(t, p = {}, k = []) {
+  const e = document.createElement(t);
+  Object.assign(e, p);
+  k.forEach(c => e.append(c));
+  return e;
+}
+function render() {
+  const list = $('#list');
+  list.replaceChildren();
+  const arr = cat === FAV ? Object.values(favs) : items;
+  if (!arr.length) {
+    list.append(el('p', { className: 'desc', textContent: cat === FAV ? 'Aucun favori pour l’instant.' : 'Chargement…' }));
+    return;
+  }
+  for (const it of arr) {
+    const star = el('button', {
+      className: 'star' + (favs[it.link] ? ' on' : ''),
+      textContent: favs[it.link] ? '★' : '☆',
+      onclick: e => {
+        e.preventDefault(); e.stopPropagation();
+        favs[it.link] ? delete favs[it.link] : (favs[it.link] = it);
+        save('favs', favs); render();
+      }
+    });
+    const body = el('div', { className: 'body' }, [
+      el('h3', { textContent: it.title }),
+      ...(it.desc ? [el('p', { className: 'desc', textContent: it.desc })] : []),
+      el('div', { className: 'meta' }, [el('span', { textContent: `${it.source} · ${ago(it.date)}` }), star])
+    ]);
+    const a = el('a', {
+      className: 'card' + (read.has(it.link) ? ' read' : ''),
+      href: it.link, target: '_blank', rel: 'noopener noreferrer',
+      onclick: () => { read.add(it.link); save('read', [...read].slice(-500)); a.classList.add('read'); }
+    }, [
+      ...(it.img ? [el('img', { src: it.img, loading: 'lazy', referrerPolicy: 'no-referrer', alt: '', onerror: e => e.target.remove() })] : []),
+      body
+    ]);
+    list.append(a);
+  }
+}
+function tabs() {
+  const n = $('#tabs');
+  n.replaceChildren();
+  [...Object.keys(FEEDS), FAV].forEach(c => n.append(el('button', {
+    textContent: c, className: c === cat ? 'on' : '',
+    onclick: () => { cat = c; save('cat', c); tabs(); refresh(false); }
+  })));
+}
+
+// ---------- Actualisation + alertes nouvelles infos ----------
+async function refresh(notify = true) {
+  if (cat === FAV) { render(); $('#status').textContent = ''; return; }
+  const c = cat;
+  const cached = load('cache:' + c, null);
+  if (cached) { items = cached.items; render(); }
+  if (busy) return;
+  busy = true; lastRefresh = Date.now();
+  $('#ico').classList.add('spin');
+  $('#status').textContent = '';
+  const fresh = await fetchCat(c);
+  busy = false; $('#ico').classList.remove('spin');
+  if (!fresh.length) {
+    $('#status').textContent = cached ? 'Hors ligne : dernières infos enregistrées.' : 'Impossible de charger les infos. Vérifie ta connexion.';
+    return;
+  }
+  save('cache:' + c, { t: Date.now(), items: fresh });
+  if (c === 'À la une') {
+    const isNew = fresh.filter(x => !seen.has(x.link));
+    if (seen.size && isNew.length && notify) notifyNew(isNew);
+    fresh.forEach(x => seen.add(x.link));
+    save('seen', [...seen].slice(-600));
+  }
+  if (cat !== c) return;
+  items = fresh; render();
+  $('#status').textContent = 'Mis à jour à ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
+async function notifyNew(n) {
+  // 1) bandeau dans l'appli + vibration
+  const b = $('#banner');
+  b.style.display = 'block';
+  b.textContent = n.length > 1 ? `🔔 ${n.length} nouvelles infos : ${n[0].title}` : `🔔 ${n[0].title}`;
+  b.onclick = () => { b.style.display = 'none'; window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  navigator.vibrate?.(120);
+  // 2) notification système si autorisée
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const o = { body: n.length > 1 ? `${n[0].title} (+${n.length - 1} autres)` : n[0].title, icon: ICON192, tag: 'news' };
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    if (reg) reg.showNotification('Monde Actu', o);
+    else new Notification('Monde Actu', o);
+  } catch {}
+}
+
+$('#bRef').onclick = () => refresh();
+$('#bBell').onclick = async () => {
+  if (!('Notification' in window)) { alert('Notifications non supportées sur ce navigateur.'); return; }
+  const p = await Notification.requestPermission();
+  if (p === 'granted') notifyNew([{ title: 'Notifications activées ✅' }]);
+};
+
+// ---------- Installation ----------
+let dp;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); dp = e; $('#bInstall').hidden = false; });
+$('#bInstall').onclick = async () => { dp.prompt(); await dp.userChoice; dp = null; $('#bInstall').hidden = true; };
+if (/iphone|ipad/i.test(navigator.userAgent) && !navigator.standalone) {
+  const b = $('#banner');
+  b.style.display = 'block';
+  b.textContent = 'Pour installer : touche Partager, puis « Sur l’écran d’accueil ».';
+}
+
+// ---------- Démarrage ----------
+tabs();
+refresh(false);
+setInterval(() => { if (!document.hidden) refresh(); }, 300000);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && Date.now() - lastRefresh > 300000) refresh();
+});
+</script>
+</body>
+</html>
