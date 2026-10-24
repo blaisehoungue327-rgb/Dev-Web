@@ -116,14 +116,42 @@ let seen = new Set(load('seen', []));
 let items = [];
 let busy = false, lastRefresh = 0;
 
-const PROXIES = [
+const text = h => new DOMParser().parseFromString(h || '', 'text/html').body.textContent.trim();
+const safeUrl = u => /^https?:\/\//i.test(u) ? u : '';
+
+// Chaque requête a un délai maximum : un service lent ne bloque plus l'appli
+function timedFetch(url, ms = 9000) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), ms);
+  return fetch(url, { signal: ctl.signal }).finally(() => clearTimeout(t));
+}
+// Méthode 2 : service qui convertit le flux RSS en JSON
+async function viaJson(url, source) {
+  const r = await timedFetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(url));
+  if (!r.ok) throw new Error('http');
+  const j = await r.json();
+  if (j.status !== 'ok' || !j.items?.length) throw new Error('vide');
+  return j.items.slice(0, 12).map(i => {
+    const d = new Date(String(i.pubDate || '').replace(' ', 'T') + 'Z');
+    const img = i.thumbnail || (i.enclosure?.link && /image/i.test(i.enclosure.type || 'image') ? i.enclosure.link : '');
+    return {
+      title: text(i.title), link: safeUrl(i.link), desc: text(i.description).slice(0, 160),
+      img: safeUrl(img), date: isNaN(d) ? Date.now() : +d, source
+    };
+  }).filter(x => x.title && x.link);
+}
+// Méthode 1 (la plus fiable) : ta propre fonction sur Vercel (dossier /api)
+const LOCAL = [u => '/api/news?url=' + encodeURIComponent(u)];
+// Méthode 3 : proxys publics en dernier recours
+const XML_PROXIES = [
   u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u),
   u => 'https://corsproxy.io/?url=' + encodeURIComponent(u)
 ];
-async function getXML(url) {
-  for (const p of PROXIES) {
+async function getXML(url, proxies) {
+  for (const p of proxies) {
     try {
-      const r = await fetch(p(url));
+      const r = await timedFetch(p(url));
       if (!r.ok) continue;
       const x = new DOMParser().parseFromString(await r.text(), 'text/xml');
       if (x.querySelector('item')) return x;
@@ -131,8 +159,13 @@ async function getXML(url) {
   }
   return null;
 }
-const text = h => new DOMParser().parseFromString(h || '', 'text/html').body.textContent.trim();
-const safeUrl = u => /^https?:\/\//i.test(u) ? u : '';
+async function getItems(url, source) {
+  const local = await getXML(url, LOCAL);
+  if (local) return parse(local, source);
+  try { return await viaJson(url, source); } catch {}
+  const x = await getXML(url, XML_PROXIES);
+  return x ? parse(x, source) : [];
+}
 
 function parse(xml, source) {
   return [...xml.querySelectorAll('item')].slice(0, 12).map(i => {
@@ -155,10 +188,7 @@ function parse(xml, source) {
 }
 
 async function fetchCat(c) {
-  const res = await Promise.all(FEEDS[c].map(async ([s, u]) => {
-    const x = await getXML(u);
-    return x ? parse(x, s) : [];
-  }));
+  const res = await Promise.all(FEEDS[c].map(([s, u]) => getItems(u, s)));
   const dup = new Set();
   return res.flat().sort((a, b) => b.date - a.date).filter(x => !dup.has(x.link) && dup.add(x.link));
 }
@@ -213,7 +243,7 @@ function tabs() {
   n.replaceChildren();
   [...Object.keys(FEEDS), FAV].forEach(c => n.append(el('button', {
     textContent: c, className: c === cat ? 'on' : '',
-    onclick: () => { cat = c; save('cat', c); tabs(); refresh(false); }
+    onclick: () => { cat = c; save('cat', c); items = []; tabs(); render(); refresh(false); }
   })));
 }
 
@@ -230,7 +260,8 @@ async function refresh(notify = true) {
   const fresh = await fetchCat(c);
   busy = false; $('#ico').classList.remove('spin');
   if (!fresh.length) {
-    $('#status').textContent = cached ? 'Hors ligne : dernières infos enregistrées.' : 'Impossible de charger les infos. Vérifie ta connexion.';
+    $('#status').textContent = cached ? 'Hors ligne : dernières infos enregistrées.' : 'Impossible de charger les infos. Vérifie ta connexion puis touche ⟳.';
+    if (!cached && cat === c) $('#list').replaceChildren(el('p', { className: 'desc', textContent: 'Aucune info à afficher pour le moment.' }));
     return;
   }
   save('cache:' + c, { t: Date.now(), items: fresh });
