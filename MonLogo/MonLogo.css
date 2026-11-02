@@ -48,11 +48,15 @@
 
         .monlogo em {
             color: var(--orange);
-        }b
+        }
 
         nav ul {
             display: flex;
             gap: 1rem;
+            list-style: none;
+        }
+
+        nav ul li {
             list-style: none;
         }
 
